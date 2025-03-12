@@ -8,6 +8,8 @@ import { Profile } from "../../types";
 import { toast } from "sonner";
 import { isSameDay, formatDistanceToNow, format } from "date-fns";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import { formatMessage } from "../../lib/formatters/message-formatter";
+import { Loader2 } from "lucide-react";
 
 interface ThreadViewProps {
   parentMessage: Message;
@@ -16,13 +18,17 @@ interface ThreadViewProps {
   profiles: Profile[];
 }
 
+interface OptimisticThreadMessage extends ThreadMessage {
+  isOptimistic?: boolean;
+}
+
 export default function ThreadView({
   parentMessage,
   parentAuthor,
   currentProfile,
   profiles
 }: ThreadViewProps) {
-  const [threadMessages, setThreadMessages] = useState<ThreadMessage[]>([]);
+  const [threadMessages, setThreadMessages] = useState<OptimisticThreadMessage[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -46,6 +52,26 @@ export default function ThreadView({
     };
 
     fetchThreadMessages();
+  }, [parentMessage.id]);
+
+  // Listen for optimistic thread replies
+  useEffect(() => {
+    const handleNewThreadReply = (e: CustomEvent) => {
+      const optimisticReply = e.detail as OptimisticThreadMessage;
+      
+      // Only add replies for this thread
+      if (optimisticReply.messageId === parentMessage.id) {
+        setThreadMessages(prev => [...prev, optimisticReply]);
+      }
+    };
+
+    // Add the event listener with type assertion
+    window.addEventListener('new-thread-reply', handleNewThreadReply as EventListener);
+    
+    // Clean up
+    return () => {
+      window.removeEventListener('new-thread-reply', handleNewThreadReply as EventListener);
+    };
   }, [parentMessage.id]);
 
   // Scroll to bottom on new messages
@@ -82,7 +108,8 @@ export default function ThreadView({
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center h-full">
-        <p className="text-muted-foreground">Loading thread messages...</p>
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <p className="text-muted-foreground mt-2">Loading thread messages...</p>
       </div>
     );
   }
@@ -119,7 +146,7 @@ export default function ThreadView({
             
             <div 
               className="prose prose-sm dark:prose-invert max-w-none break-words"
-              dangerouslySetInnerHTML={{ __html: parentMessage.content }}
+              dangerouslySetInnerHTML={{ __html: formatMessage(parentMessage.content) }}
             />
             
             <p className="text-xs text-muted-foreground mt-2">
@@ -141,7 +168,10 @@ export default function ThreadView({
         ) : (
           <>
             {threadMessages.map((message, index) => (
-              <div key={message.id} className="px-4 py-2 hover:bg-muted/50">
+              <div 
+                key={message.id} 
+                className={`px-4 py-2 hover:bg-muted/50 ${message.isOptimistic ? 'opacity-70' : ''}`}
+              >
                 {shouldShowDate(message, index) && (
                   <div className="flex justify-center mb-4">
                     <div className="px-2 py-1 rounded-md text-xs text-muted-foreground bg-muted/50">
@@ -173,11 +203,16 @@ export default function ThreadView({
                       <span className="text-xs text-muted-foreground">
                         {formatDistanceToNow(new Date(message.createdAt), { addSuffix: true })}
                       </span>
+                      {message.isOptimistic && (
+                        <span className="text-xs italic text-muted-foreground">
+                          (sending...)
+                        </span>
+                      )}
                     </div>
                     
                     <div 
                       className="prose prose-sm dark:prose-invert max-w-none break-words"
-                      dangerouslySetInnerHTML={{ __html: message.content }}
+                      dangerouslySetInnerHTML={{ __html: formatMessage(message.content) }}
                     />
                   </div>
                 </div>

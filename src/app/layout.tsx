@@ -8,6 +8,9 @@ import { Sidebar } from "@/components/layout/sidebar";
 import { MainContent } from "@/components/layout/main-content";
 import { MobileNav } from "@/components/layout/mobile-nav";
 import { MobileSidebar } from "@/components/layout/mobile-sidebar";
+import { OptimisticMessagesProvider } from "@/hooks/use-optimistic-messages";
+import { ThreadProvider } from "@/hooks/use-thread-context";
+import { KeyboardShortcutsProvider } from "@/components/providers/keyboard-shortcuts-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -43,30 +46,36 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <ProfileProvider>
-            {isLandingPage ? (
-              children
-            ) : (
-              <div className="flex h-screen flex-col md:flex-row">
-                {/* Desktop Sidebar - hidden on mobile */}
-                <div className="hidden md:block md:w-64">
-                  <Sidebar />
-                </div>
-                
-                {/* Mobile Navigation - hidden on desktop */}
-                <div className="md:hidden">
-                  <MobileNav />
-                </div>
-                
-                {/* Main Content */}
-                <MainContent>
-                  {children}
-                </MainContent>
-                
-                {/* Mobile Channel/DM Sidebar - floating button + drawer */}
-                <MobileSidebar />
-              </div>
-            )}
-            <Toaster />
+            <OptimisticMessagesProvider>
+              <ThreadProvider>
+                <KeyboardShortcutsProvider>
+                  {isLandingPage ? (
+                    children
+                  ) : (
+                    <div className="flex h-screen flex-col md:flex-row">
+                      {/* Desktop Sidebar - hidden on mobile */}
+                      <div className="hidden md:block md:w-64">
+                        <Sidebar />
+                      </div>
+                      
+                      {/* Mobile Navigation - hidden on desktop */}
+                      <div className="md:hidden">
+                        <MobileNav />
+                      </div>
+                      
+                      {/* Main Content */}
+                      <MainContent>
+                        {children}
+                      </MainContent>
+                      
+                      {/* Mobile Channel/DM Sidebar - floating button + drawer */}
+                      <MobileSidebar />
+                    </div>
+                  )}
+                  <Toaster />
+                </KeyboardShortcutsProvider>
+              </ThreadProvider>
+            </OptimisticMessagesProvider>
           </ProfileProvider>
         </ThemeProvider>
       </body>

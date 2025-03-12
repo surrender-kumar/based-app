@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { FC, useState, useRef } from "react";
 import { formatDistanceToNow, format } from "date-fns";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Button } from "../ui/button";
@@ -18,6 +18,7 @@ import { Profile } from "../../types";
 import { toast } from "sonner";
 import { Textarea } from "../ui/textarea";
 import { cn } from "../../lib/utils";
+import { EmojiReactions } from "./emoji-reactions";
 
 interface MessageItemProps {
   message: Message;
@@ -27,6 +28,13 @@ interface MessageItemProps {
   isLastMessage?: boolean;
   showDate?: boolean;
 }
+
+// Mock reactions for demo purposes - in a real app these would come from the database
+const mockReactions = new Map<string, Array<{
+  emoji: string;
+  count: number;
+  userIds: string[];
+}>>();
 
 export default function MessageItem({
   message,
@@ -40,6 +48,9 @@ export default function MessageItem({
   const [editedContent, setEditedContent] = useState(message.content);
   const [isDeleting, setIsDeleting] = useState(false);
   const editInputRef = useRef<HTMLTextAreaElement>(null);
+
+  // Get existing reactions or create new empty array
+  const messageReactions = mockReactions.get(message.id) || [];
 
   const isOwnMessage = profile?.id === message.profileId;
   const canModify = isOwnMessage;
@@ -59,6 +70,61 @@ export default function MessageItem({
       .join("")
       .toUpperCase();
   };
+  
+  // Handle adding reaction
+  const handleAddReaction = (messageId: string, emoji: string) => {
+    const currentReactions = mockReactions.get(messageId) || [];
+    const existingReaction = currentReactions.find(r => r.emoji === emoji);
+    
+    if (existingReaction) {
+      // User already reacted with this emoji - skip if they're already in the list
+      if (!existingReaction.userIds.includes(profile?.id || "")) {
+        existingReaction.count++;
+        existingReaction.userIds.push(profile?.id || "");
+      }
+    } else {
+      // New reaction
+      currentReactions.push({
+        emoji,
+        count: 1,
+        userIds: [profile?.id || ""]
+      });
+    }
+    
+    // Update the map
+    mockReactions.set(messageId, currentReactions);
+    // Force re-render
+    forceUpdate();
+  };
+  
+  // Handle removing reaction
+  const handleRemoveReaction = (messageId: string, emoji: string) => {
+    const currentReactions = mockReactions.get(messageId) || [];
+    const existingReaction = currentReactions.find(r => r.emoji === emoji);
+    
+    if (existingReaction) {
+      // Remove user from the reaction
+      existingReaction.userIds = existingReaction.userIds.filter(id => id !== profile?.id);
+      existingReaction.count--;
+      
+      // If no users left, remove the reaction
+      if (existingReaction.count <= 0) {
+        mockReactions.set(
+          messageId,
+          currentReactions.filter(r => r.emoji !== emoji)
+        );
+      } else {
+        mockReactions.set(messageId, currentReactions);
+      }
+      
+      // Force re-render
+      forceUpdate();
+    }
+  };
+  
+  // Force re-render for the mock implementation
+  const [, updateState] = useState({});
+  const forceUpdate = () => updateState({});
   
   // Handle message edit
   const handleEdit = async () => {
@@ -137,7 +203,11 @@ export default function MessageItem({
   });
   
   return (
-    <div className="group relative px-4 py-2 hover:bg-muted/50">
+    <div className={cn(
+      "group relative flex gap-2 py-4 px-4 w-full transition-colors",
+      !isEditing && "hover:bg-primary/5",
+      isLastMessage && "pb-8"
+    )}>
       {showDate && (
         <div className="flex justify-center mb-4">
           <div className="px-2 py-1 rounded-md text-xs text-muted-foreground bg-muted/50">
@@ -205,6 +275,15 @@ export default function MessageItem({
               dangerouslySetInnerHTML={{ __html: formatMessage(message.content) }}
             />
           )}
+          
+          {/* Emoji reactions */}
+          <EmojiReactions
+            reactions={messageReactions}
+            messageId={message.id}
+            currentUserId={profile?.id || null}
+            onReactionAdd={handleAddReaction}
+            onReactionRemove={handleRemoveReaction}
+          />
           
           {message.hasThread && !isEditing && (
             <button 

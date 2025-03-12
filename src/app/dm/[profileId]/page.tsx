@@ -3,15 +3,14 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useCurrentProfile } from "../../../hooks/use-current-profile";
-import { DirectMessage, getDirectMessages, markMessagesAsRead, sendDirectMessage } from "../../../lib/actions/direct-messages";
+import { DirectMessage, getDirectMessages, markMessagesAsRead } from "../../../lib/actions/direct-messages";
 import { Avatar, AvatarFallback, AvatarImage } from "../../../components/ui/avatar";
-import { Input } from "../../../components/ui/input";
-import { Button } from "../../../components/ui/button";
-import { Send } from "lucide-react";
 import { toast } from "sonner";
 import { formatRelative } from "date-fns";
 import { Profile } from "../../../types";
 import { getProfileById } from "../../../lib/api-client";
+import { useOptimisticMessages } from "@/hooks/use-optimistic-messages";
+import { Loader2 } from "lucide-react";
 
 export default function DirectMessagePage() {
   const params = useParams();
@@ -19,11 +18,12 @@ export default function DirectMessagePage() {
   const [otherProfile, setOtherProfile] = useState<Profile | null>(null);
   const [messages, setMessages] = useState<DirectMessage[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isSending, setIsSending] = useState(false);
-  const [newMessage, setNewMessage] = useState("");
   const { profile } = useCurrentProfile();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+  
+  // Get optimistic messages
+  const { directMessages, setDirectMessages } = useOptimisticMessages();
   
   // Fetch partner profile
   useEffect(() => {
@@ -58,7 +58,11 @@ export default function DirectMessagePage() {
       try {
         const result = await getDirectMessages(profile.id, profileId);
         if (result.success && result.data) {
-          setMessages(result.data);
+          const fetchedMessages = result.data;
+          
+          // Update both local state and optimistic messages context
+          setMessages(fetchedMessages);
+          setDirectMessages(profileId, fetchedMessages);
           
           // Mark messages as read
           await markMessagesAsRead(profile.id, profileId);
@@ -74,35 +78,15 @@ export default function DirectMessagePage() {
     if (profile) {
       fetchMessages();
     }
-  }, [profile, profileId]);
+  }, [profile, profileId, setDirectMessages]);
+  
+  // Get the messages to display - from optimistic context if available, otherwise from local state
+  const displayMessages = directMessages[profileId] || messages;
   
   // Scroll to bottom on new messages
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
-  
-  // Handle sending a message
-  const handleSendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!profile || !newMessage.trim()) return;
-    
-    setIsSending(true);
-    try {
-      const result = await sendDirectMessage(profile.id, profileId, newMessage.trim());
-      if (result.success && result.data) {
-        setMessages((prev) => [...prev, result.data]);
-        setNewMessage("");
-      } else {
-        toast.error("Failed to send message");
-      }
-    } catch (error) {
-      console.error("[SEND_MESSAGE_ERROR]", error);
-      toast.error("Failed to send message");
-    } finally {
-      setIsSending(false);
-    }
-  };
+  }, [displayMessages]);
   
   // Get initials for avatar fallback
   const getInitials = (name: string) => {
@@ -146,9 +130,10 @@ export default function DirectMessagePage() {
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {isLoading ? (
           <div className="flex items-center justify-center h-full">
-            <p className="text-sm text-gray-500">Loading messages...</p>
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            <p className="text-sm text-gray-500 ml-2">Loading messages...</p>
           </div>
-        ) : messages.length === 0 ? (
+        ) : displayMessages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center">
             <p className="text-sm text-gray-500">No messages yet</p>
             <p className="text-xs text-gray-500 mt-1">
@@ -156,7 +141,7 @@ export default function DirectMessagePage() {
             </p>
           </div>
         ) : (
-          messages.map((message) => {
+          displayMessages.map((message) => {
             const isOwnMessage = message.senderId === profile.id;
             
             return (
@@ -177,24 +162,9 @@ export default function DirectMessagePage() {
         <div ref={messagesEndRef} />
       </div>
       
-      {/* Message Input */}
-      <div className="p-4 border-t">
-        <form onSubmit={handleSendMessage} className="flex items-center gap-2">
-          <Input
-            placeholder={`Message ${otherProfile?.name || '...'}`}
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            className="flex-1"
-            disabled={isSending || isLoading || !otherProfile}
-          />
-          <Button 
-            type="submit" 
-            size="icon"
-            disabled={isSending || isLoading || !newMessage.trim() || !otherProfile}
-          >
-            <Send className="h-4 w-4" />
-          </Button>
-        </form>
+      {/* Note about the message input */}
+      <div className="px-4 pb-2 text-xs text-muted-foreground">
+        <p>The message input is provided by the MainContent layout component</p>
       </div>
     </div>
   );

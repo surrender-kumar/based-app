@@ -7,10 +7,10 @@ import { Button } from "../../../../../components/ui/button";
 import { useCurrentProfile } from "../../../../../hooks/use-current-profile";
 import { getParentMessage } from "../../../../../lib/actions/thread-messages";
 import ThreadView from "../../../../../components/messages/thread-view";
-import ThreadReply from "../../../../../components/messages/thread-reply";
 import { Profile } from "../../../../../types";
 import { toast } from "sonner";
 import { getProfiles } from "../../../../../lib/api-client";
+import { useThreadContext } from "@/hooks/use-thread-context";
 
 export default function ThreadPage() {
   const router = useRouter();
@@ -18,11 +18,26 @@ export default function ThreadPage() {
   const channelId = params.channelId as string;
   const messageId = params.messageId as string;
   const { profile } = useCurrentProfile();
+  const { setIsInThread, setParentMessageId, setThreadChannelId } = useThreadContext();
   
   const [parentMessage, setParentMessage] = useState<any>(null);
   const [parentAuthor, setParentAuthor] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [profiles, setProfiles] = useState<Profile[]>([]);
+  
+  // Set thread context when component mounts
+  useEffect(() => {
+    setIsInThread(true);
+    setParentMessageId(messageId);
+    setThreadChannelId(channelId);
+    
+    // Clean up when component unmounts
+    return () => {
+      setIsInThread(false);
+      setParentMessageId(null);
+      setThreadChannelId(null);
+    };
+  }, [setIsInThread, setParentMessageId, setThreadChannelId, messageId, channelId]);
   
   // Handle close
   const handleClose = () => {
@@ -125,11 +140,7 @@ export default function ThreadPage() {
         />
       </div>
       
-      {/* Thread Reply */}
-      <ThreadReply
-        messageId={messageId}
-        profile={profile}
-      />
+      {/* Note: The MessageInput component from the layout is now used for replying */}
     </div>
   );
 } 

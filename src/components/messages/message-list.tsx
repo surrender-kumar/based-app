@@ -6,6 +6,9 @@ import MessageItem from "./message-item";
 import { Profile } from "../../types";
 import { toast } from "sonner";
 import { isSameDay } from "date-fns";
+import { useInfiniteScroll } from "../../lib/utils/infinite-scroll";
+import { Loader2 } from "lucide-react";
+import { useOptimisticMessages } from "@/hooks/use-optimistic-messages";
 
 interface MessageListProps {
   channelId: string;
@@ -20,9 +23,13 @@ export default function MessageList({
   profiles,
   onReplyClick
 }: MessageListProps) {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [allMessages, setAllMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const { channelMessages, setChannelMessages } = useOptimisticMessages();
+
+  // Get optimistic messages for this channel (if any)
+  const optimisticChannelMessages = channelMessages[channelId] || [];
 
   // Fetch messages
   useEffect(() => {
@@ -31,7 +38,10 @@ export default function MessageList({
       try {
         const result = await getMessages(channelId);
         if (result.success && result.data) {
-          setMessages(result.data);
+          const fetchedMessages = result.data;
+          // Update both local state and optimistic context
+          setAllMessages(fetchedMessages);
+          setChannelMessages(channelId, fetchedMessages);
         } else {
           toast.error(result.error || "Failed to load messages");
         }
@@ -44,12 +54,34 @@ export default function MessageList({
     };
 
     fetchMessages();
-  }, [channelId]);
+  }, [channelId, setChannelMessages]);
+
+  // Use optimistic messages from context if available, otherwise use local state
+  const messagesForInfiniteScroll = optimisticChannelMessages.length > 0 
+    ? optimisticChannelMessages 
+    : allMessages;
+
+  // Setup infinite scrolling
+  const {
+    visibleItems: messages,
+    isLoading: isLoadingMore,
+    scrollRef,
+    handleScroll,
+    hasReachedEnd
+  } = useInfiniteScroll<Message>(messagesForInfiniteScroll, {
+    direction: "bottom",
+    initialBatchSize: 30,
+    batchSize: 20,
+    enabled: !isLoading
+  });
 
   // Scroll to bottom on new messages
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+    if (messages.length > 0 && messagesForInfiniteScroll.length > 0 && 
+        messages[messages.length - 1].id === messagesForInfiniteScroll[messagesForInfiniteScroll.length - 1].id) {
+      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages, messagesForInfiniteScroll]);
 
   // Find a profile by ID
   const findProfile = (profileId: string): Profile | null => {
@@ -66,7 +98,8 @@ export default function MessageList({
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center h-full">
-        <p className="text-muted-foreground">Loading messages...</p>
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <p className="text-muted-foreground mt-2">Loading messages...</p>
       </div>
     );
   }
@@ -83,7 +116,17 @@ export default function MessageList({
   }
 
   return (
-    <div className="flex-1 overflow-y-auto py-4">
+    <div 
+      className="flex-1 overflow-y-auto py-4"
+      ref={scrollRef as React.RefObject<HTMLDivElement>}
+      onScroll={handleScroll}
+    >
+      {!hasReachedEnd && (
+        <div className="flex justify-center py-2">
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        </div>
+      )}
+      
       {messages.map((message, index) => (
         <MessageItem
           key={message.id}

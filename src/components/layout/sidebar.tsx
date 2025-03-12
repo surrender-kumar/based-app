@@ -29,7 +29,7 @@ export const Sidebar = () => {
     <div className="flex flex-col h-full bg-muted/30 border-r border-border w-64">
       {/* Header section */}
       <div className="p-3 border-b border-border flex items-center justify-between">
-        <div className="font-semibold text-xl">Based App</div>
+        <Link href="/" className="font-semibold text-xl hover:opacity-80 transition-opacity">Based App</Link>
         <div className="flex items-center gap-2">
           <NotificationBadge />
           <ThemeSwitch />
@@ -48,6 +48,7 @@ export const Sidebar = () => {
           <Input 
             placeholder="Search" 
             className="pl-8 bg-background text-sm"
+            data-search-input
           />
         </div>
       </div>
