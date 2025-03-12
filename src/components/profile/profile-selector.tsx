@@ -57,8 +57,8 @@ export const ProfileSelector = () => {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger className="flex flex-col items-center outline-none bg-muted/50 hover:bg-muted px-5 py-3 rounded-xl transition-colors">
-        <Avatar className="h-16 w-16 border mb-2">
+      <DropdownMenuTrigger className="flex flex-col items-center justify-center outline-none bg-muted/50 hover:bg-muted px-5 py-3 rounded-xl transition-colors w-full">
+        <Avatar className="h-16 w-16 border mb-2 mx-auto">
           {profile?.imageUrl && (
             <AvatarImage src={profile.imageUrl} alt={profile.name} />
           )}
