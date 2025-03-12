@@ -1,7 +1,7 @@
 "use server";
 
-import { db } from "@/db/db";
-import { channels } from "@/db/schema";
+import { db } from "../../../db/db";
+import { channels } from "../../../db/schema";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -37,7 +37,7 @@ export async function createChannel(data: CreateChannelData) {
 export async function getChannels() {
   try {
     const allChannels = await db.query.channels.findMany({
-      orderBy: (channels, { desc }) => [desc(channels.createdAt)],
+      orderBy: (channels, { desc }: { desc: any }) => [desc(channels.createdAt)],
     });
     
     return { success: true, data: allChannels };

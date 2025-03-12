@@ -80,7 +80,7 @@
 
 ## Channel Management
 
-- [ ] Step 6: Implement Channel Management
+- [x] Step 6: Implement Channel Management
 
   - Task: Create functionality for creating, joining, and listing channels
   
