@@ -33,7 +33,7 @@
 
 ## Core UI Components
 
-- [ ] Step 3: Create Base UI Components
+- [x] Step 3: Create Base UI Components
 
   - Task: Set up the UI components that will be reused across the application
   
@@ -50,7 +50,7 @@
   
   - User Instructions: Run `npx shadcn-ui@latest add` command for each component needed
 
-- [ ] Step 4: Create User Context for Profile Selection
+- [x] Step 4: Create User Context for Profile Selection
 
   - Task: Create a context to manage the currently selected user profile
   
