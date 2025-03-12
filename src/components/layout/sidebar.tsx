@@ -3,36 +3,34 @@
 import { ProfileSelector } from "@/components/profile/profile-selector";
 import { ThemeSwitch } from "@/components/layout/theme-switch";
 import { 
-  Hash, 
-  Users, 
-  Plus, 
-  MessageCircle,
   Settings,
-  Search
+  Search,
+  PlusCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-
-// Temporary mock data
-const channels = [
-  { id: "1", name: "general" },
-  { id: "2", name: "random" },
-  { id: "3", name: "introductions" }
-];
-
-const directMessages = [
-  { id: "1", name: "John Doe" },
-  { id: "2", name: "Jane Smith" }
-];
+import ChannelList from "../channels/channel-list";
+import { useState } from "react";
+import { useCurrentProfile } from "@/hooks/use-current-profile";
+import CreateChannelModal from "../channels/create-channel-modal";
+import { toast } from "sonner";
+import DmList from "../direct-messages/dm-list";
 
 export const Sidebar = () => {
   const pathname = usePathname();
+  const [isCreateChannelOpen, setIsCreateChannelOpen] = useState(false);
+  const { profile } = useCurrentProfile();
 
   const isActive = (href: string) => {
     return pathname === href;
+  };
+
+  const handleCreateChannelSuccess = (channel: any) => {
+    setIsCreateChannelOpen(false);
+    toast.success(`Channel ${channel.name} created successfully`);
   };
   
   return (
@@ -59,64 +57,29 @@ export const Sidebar = () => {
         </div>
       </div>
       
-      {/* Channels */}
-      <div className="px-2 py-3">
-        <div className="flex items-center justify-between px-2 mb-2">
-          <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-            Channels
-          </h3>
-          <Button size="icon" variant="ghost" className="h-5 w-5">
-            <Plus className="h-3 w-3" />
+      {/* Create Channel Button */}
+      {profile && (
+        <div className="px-3 mb-2">
+          <Button 
+            onClick={() => setIsCreateChannelOpen(true)}
+            variant="outline"
+            size="sm"
+            className="w-full flex items-center justify-center gap-2"
+          >
+            <PlusCircle className="h-4 w-4" />
+            <span>Create Channel</span>
           </Button>
         </div>
-        <ul className="space-y-1">
-          {channels.map(channel => (
-            <li key={channel.id}>
-              <Link
-                href={`/channels/${channel.id}`}
-                className={cn(
-                  "flex items-center gap-2 px-2 py-1.5 rounded-md text-sm",
-                  isActive(`/channels/${channel.id}`)
-                    ? "bg-accent text-accent-foreground"
-                    : "hover:bg-accent/50 text-foreground"
-                )}
-              >
-                <Hash className="h-4 w-4" />
-                <span>{channel.name}</span>
-              </Link>
-            </li>
-          ))}
-        </ul>
+      )}
+      
+      {/* Channels */}
+      <div className="px-2 py-3">
+        <ChannelList />
       </div>
       
       {/* Direct Messages */}
       <div className="px-2 py-3">
-        <div className="flex items-center justify-between px-2 mb-2">
-          <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-            Direct Messages
-          </h3>
-          <Button size="icon" variant="ghost" className="h-5 w-5">
-            <Plus className="h-3 w-3" />
-          </Button>
-        </div>
-        <ul className="space-y-1">
-          {directMessages.map(dm => (
-            <li key={dm.id}>
-              <Link
-                href={`/dm/${dm.id}`}
-                className={cn(
-                  "flex items-center gap-2 px-2 py-1.5 rounded-md text-sm",
-                  isActive(`/dm/${dm.id}`)
-                    ? "bg-accent text-accent-foreground"
-                    : "hover:bg-accent/50 text-foreground"
-                )}
-              >
-                <MessageCircle className="h-4 w-4" />
-                <span>{dm.name}</span>
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <DmList />
       </div>
       
       {/* Settings */}
@@ -134,6 +97,16 @@ export const Sidebar = () => {
           <span>Settings</span>
         </Link>
       </div>
+      
+      {/* Create Channel Modal */}
+      {profile && (
+        <CreateChannelModal
+          isOpen={isCreateChannelOpen}
+          onClose={() => setIsCreateChannelOpen(false)}
+          onCreateSuccess={handleCreateChannelSuccess}
+          profileId={profile.id}
+        />
+      )}
     </div>
   );
 }; 

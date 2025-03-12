@@ -12,7 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { toast } from "@/components/ui/toast";
+import { toast } from "sonner";
 
 export const ProfileSelector = () => {
   const { profile, setProfile, isLoading } = useCurrentProfile() as ProfileContextType;

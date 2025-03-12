@@ -97,7 +97,7 @@
 
 ## Direct Messaging
 
-- [ ] Step 7: Implement Direct Messaging
+- [x] Step 7: Implement Direct Messaging
 
   - Task: Create direct messaging functionality between users
   

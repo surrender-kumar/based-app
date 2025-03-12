@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { createChannel } from "@/lib/actions/channels";
-import { Button } from "@/components/ui/button";
+import { createChannel } from "../../lib/actions/channels";
+import { Button } from "../ui/button";
 import {
   Dialog,
   DialogContent,
@@ -10,11 +10,11 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
+} from "../ui/dialog";
+import { Input } from "../ui/input";
+import { Label } from "../ui/label";
+import { Textarea } from "../ui/textarea";
+import { Checkbox } from "../ui/checkbox";
 import { toast } from "sonner";
 
 // Using a type that matches the database schema
