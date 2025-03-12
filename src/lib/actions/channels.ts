@@ -6,28 +6,7 @@ import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { v4 as uuidv4 } from 'uuid';
-
-// Mock channels for testing
-const mockChannels = [
-  {
-    id: "1",
-    name: "general",
-    description: "General discussion channel",
-    createdById: "1",
-    isPrivate: false,
-    createdAt: new Date(),
-    updatedAt: new Date()
-  },
-  {
-    id: "2", 
-    name: "random",
-    description: "Random topics and casual chat",
-    createdById: "1",
-    isPrivate: false,
-    createdAt: new Date(),
-    updatedAt: new Date()
-  }
-];
+import { mockChannels } from "../../mocks/channels-data";
 
 /**
  * Type for creating a new channel
@@ -87,7 +66,7 @@ export async function getChannels() {
     } catch (dbError) {
       console.error("[DB_ERROR]", dbError);
       
-      // Fallback to mock implementation
+      // Fallback to mock implementation - ensure we return a copy of the array
       return { success: true, data: [...mockChannels] };
     }
   } catch (error) {

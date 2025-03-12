@@ -30,46 +30,46 @@ export type Conversation = {
 // Mock direct messages for testing
 const mockDirectMessages: DirectMessage[] = [
   {
-    id: "1",
+    id: "d1e2f3a4-b5c6-47d8-9e0f-1a2b3c4d5e6f",
     content: "Hey, how are you doing?",
-    senderId: "1", // John Doe
-    receiverId: "2", // Jane Smith
+    senderId: "c5d2e1a9-de17-4bd0-b061-7a8754639b3f", // John Doe
+    receiverId: "a7b91e5c-e4fd-42f8-b68a-0d3a9b1c6f2d", // Jane Smith
     createdAt: new Date(Date.now() - 3600000 * 24 * 2), // 2 days ago
     updatedAt: new Date(Date.now() - 3600000 * 24 * 2),
     isRead: true
   },
   {
-    id: "2",
+    id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
     content: "I'm good, thanks! How about you?",
-    senderId: "2", // Jane Smith
-    receiverId: "1", // John Doe
+    senderId: "a7b91e5c-e4fd-42f8-b68a-0d3a9b1c6f2d", // Jane Smith
+    receiverId: "c5d2e1a9-de17-4bd0-b061-7a8754639b3f", // John Doe
     createdAt: new Date(Date.now() - 3600000 * 24 * 1), // 1 day ago
     updatedAt: new Date(Date.now() - 3600000 * 24 * 1),
     isRead: true
   },
   {
-    id: "3",
+    id: "f1e2d3c4-b5a6-47d8-9e0f-1a2b3c4d5e6f",
     content: "Do you have the latest design files?",
-    senderId: "1", // John Doe
-    receiverId: "2", // Jane Smith
+    senderId: "c5d2e1a9-de17-4bd0-b061-7a8754639b3f", // John Doe
+    receiverId: "a7b91e5c-e4fd-42f8-b68a-0d3a9b1c6f2d", // Jane Smith
     createdAt: new Date(Date.now() - 3600000 * 2), // 2 hours ago
     updatedAt: new Date(Date.now() - 3600000 * 2),
     isRead: false
   },
   {
-    id: "4",
+    id: "e1d2c3b4-a5f6-47d8-9e0f-1a2b3c4d5e6f",
     content: "Hey Bob, welcome to the team!",
-    senderId: "1", // John Doe
-    receiverId: "3", // Bob Johnson
+    senderId: "c5d2e1a9-de17-4bd0-b061-7a8754639b3f", // John Doe
+    receiverId: "f6d48c3a-7b29-4e5f-8c1d-9a2b3c4d5e6f", // Bob Johnson
     createdAt: new Date(Date.now() - 3600000 * 24 * 3), // 3 days ago
     updatedAt: new Date(Date.now() - 3600000 * 24 * 3),
     isRead: true
   },
   {
-    id: "5",
+    id: "d1c2b3a4-9e8f-47d8-9e0f-1a2b3c4d5e6f",
     content: "Thanks John! Excited to be here.",
-    senderId: "3", // Bob Johnson
-    receiverId: "1", // John Doe
+    senderId: "f6d48c3a-7b29-4e5f-8c1d-9a2b3c4d5e6f", // Bob Johnson
+    receiverId: "c5d2e1a9-de17-4bd0-b061-7a8754639b3f", // John Doe
     createdAt: new Date(Date.now() - 3600000 * 24 * 3 + 1800000), // 3 days ago + 30 minutes
     updatedAt: new Date(Date.now() - 3600000 * 24 * 3 + 1800000),
     isRead: true
@@ -121,7 +121,7 @@ export async function getConversations(profileId: string) {
       
       // Create conversation summary
       conversations.push({
-        id: partnerId,
+        id: uuidv4(),
         profileId: partnerId,
         name: partner.name,
         email: partner.email,

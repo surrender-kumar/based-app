@@ -22,140 +22,111 @@ type Channel = {
   updatedAt: Date;
 };
 
+interface ChannelItemProps {
+  channel: Channel;
+  onSelect?: () => void;
+}
+
 // Inlined ChannelItem component
-const ChannelItem = ({ channel }: { channel: Channel }) => {
+const ChannelItem = ({ channel, onSelect }: ChannelItemProps) => {
   const pathname = usePathname();
   const isActive = pathname === `/channels/${channel.id}`;
   
   return (
     <Link
       href={`/channels/${channel.id}`}
+      onClick={onSelect}
       className={cn(
-        "group px-3 py-2 rounded-md flex items-center gap-x-2 w-full hover:bg-zinc-700/10 dark:hover:bg-zinc-700/50 transition",
-        isActive && "bg-zinc-700/20 dark:bg-zinc-700"
+        "group px-2 py-2 rounded-md flex items-center gap-x-2 w-full hover:bg-accent/50",
+        isActive && "bg-accent text-accent-foreground"
       )}
     >
-      <div className="flex items-center justify-center w-5 h-5">
-        {channel.isPrivate ? (
-          <Lock className="h-4 w-4 text-zinc-500 dark:text-zinc-400" />
-        ) : (
-          <Hash className="h-4 w-4 text-zinc-500 dark:text-zinc-400" />
-        )}
-      </div>
-      <p className={cn(
-        "line-clamp-1 font-medium text-sm text-zinc-500 dark:text-zinc-400 group-hover:text-zinc-600 dark:group-hover:text-zinc-300 transition",
-        isActive && "text-primary dark:text-zinc-200 dark:group-hover:text-white"
-      )}>
-        {channel.name}
-      </p>
+      {channel.isPrivate ? (
+        <Lock className="h-4 w-4 text-muted-foreground" />
+      ) : (
+        <Hash className="h-4 w-4 text-muted-foreground" />
+      )}
+      <span className="truncate">{channel.name}</span>
     </Link>
   );
 };
 
-export default function ChannelList() {
+interface ChannelListProps {
+  onSelect?: () => void;
+}
+
+export default function ChannelList({ onSelect }: ChannelListProps = {}) {
   const [channels, setChannels] = useState<Channel[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalError, setModalError] = useState(false);
-  
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const { profile } = useCurrentProfile();
-  
+
   useEffect(() => {
     const fetchChannels = async () => {
+      if (!profile) return;
+      
       setIsLoading(true);
       try {
         const result = await getChannels();
+        console.log("Fetched channels:", result);
         if (result.success && result.data) {
           setChannels(result.data);
+        } else {
+          console.error("Failed to get channels:", result.error);
         }
       } catch (error) {
-        console.error("[FETCH_CHANNELS_ERROR]", error);
-        toast.error("Failed to fetch channels");
+        console.error("Error fetching channels:", error);
+        toast.error("Failed to load channels");
       } finally {
         setIsLoading(false);
       }
     };
-    
+
     fetchChannels();
-  }, []);
-  
+  }, [profile]);
+
   const handleCreateSuccess = (newChannel: Channel) => {
-    setChannels((prev) => [newChannel, ...prev]);
-    setIsModalOpen(false);
+    setIsCreateModalOpen(false);
+    setChannels(prevChannels => [...prevChannels, newChannel]);
+    toast.success(`Channel ${newChannel.name} created successfully`);
   };
 
-  const handleCreateClick = () => {
-    try {
-      setIsModalOpen(true);
-      setModalError(false);
-    } catch (error) {
-      console.error("[MODAL_ERROR]", error);
-      setModalError(true);
-      toast.error("Failed to open channel creation dialog");
-    }
-  };
-  
   return (
-    <div className="py-2">
-      <div className="flex items-center justify-between px-3 mb-2">
-        <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400">
-          Channels
-        </h2>
+    <div className="space-y-2">
+      <div className="flex items-center justify-between px-2">
+        <h2 className="text-sm font-semibold">Channels</h2>
         {profile && (
           <Button 
-            onClick={handleCreateClick} 
+            onClick={() => setIsCreateModalOpen(true)}
             variant="ghost" 
             size="icon" 
-            className="h-6 w-6"
+            className="h-6 w-6 rounded-full"
           >
             <Plus className="h-4 w-4" />
           </Button>
         )}
       </div>
       
-      <div className="space-y-0.5">
+      <div className="space-y-[2px]">
         {isLoading ? (
-          <div className="px-3 py-2">
-            <p className="text-sm text-gray-500">Loading channels...</p>
-          </div>
+          <div className="text-xs text-muted-foreground px-2">Loading...</div>
         ) : channels.length === 0 ? (
-          <div className="px-3 py-2">
-            <p className="text-sm text-gray-500">No channels available.</p>
-          </div>
+          <div className="text-xs text-muted-foreground px-2">No channels found</div>
         ) : (
-          channels.map((channel) => (
-            <ChannelItem 
-              key={channel.id} 
-              channel={channel} 
-            />
+          channels.map(channel => (
+            <ChannelItem key={channel.id} channel={channel} onSelect={onSelect} />
           ))
         )}
       </div>
-      
-      {profile && !modalError && (
+
+      {/* Create Channel Modal */}
+      {profile && (
         <CreateChannelModal
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
+          isOpen={isCreateModalOpen}
+          onClose={() => setIsCreateModalOpen(false)}
           onCreateSuccess={handleCreateSuccess}
           profileId={profile.id}
         />
-      )}
-      
-      {modalError && isModalOpen && (
-        <div className="mt-2 px-3 py-2 bg-gray-100 dark:bg-gray-800 rounded-md">
-          <p className="text-sm text-center text-gray-500">
-            There was an issue opening the channel creation dialog.
-            <br />
-            <Button 
-              onClick={() => setIsModalOpen(false)}
-              variant="outline"
-              size="sm"
-              className="mt-2"
-            >
-              Close
-            </Button>
-          </p>
-        </div>
       )}
     </div>
   );

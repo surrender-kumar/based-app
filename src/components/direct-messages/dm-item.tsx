@@ -11,9 +11,10 @@ import { formatDistanceToNow } from "date-fns";
 
 interface DmItemProps {
   conversation: Conversation;
+  onClick?: () => void;
 }
 
-export default function DmItem({ conversation }: DmItemProps) {
+export default function DmItem({ conversation, onClick }: DmItemProps) {
   const pathname = usePathname();
   const isActive = pathname === `/dm/${conversation.profileId}`;
   
@@ -35,9 +36,10 @@ export default function DmItem({ conversation }: DmItemProps) {
   return (
     <Link
       href={`/dm/${conversation.profileId}`}
+      onClick={onClick}
       className={cn(
-        "group px-3 py-2 rounded-md flex items-center gap-x-2 w-full hover:bg-zinc-700/10 dark:hover:bg-zinc-700/50 transition",
-        isActive && "bg-zinc-700/20 dark:bg-zinc-700"
+        "group px-2 py-2 rounded-md flex items-center gap-x-2 w-full hover:bg-accent/50",
+        isActive && "bg-accent text-accent-foreground"
       )}
     >
       <Avatar className="h-8 w-8 flex-shrink-0">
@@ -49,15 +51,12 @@ export default function DmItem({ conversation }: DmItemProps) {
       
       <div className="flex-1 overflow-hidden">
         <div className="flex items-center justify-between">
-          <p className={cn(
-            "font-medium text-sm truncate",
-            isActive ? "text-primary dark:text-white" : "text-zinc-600 dark:text-zinc-300"
-          )}>
+          <p className="font-medium text-sm truncate">
             {conversation.name}
           </p>
           
           {conversation.lastMessageAt && (
-            <span className="text-xs text-gray-500 dark:text-gray-400 flex-shrink-0">
+            <span className="text-xs text-muted-foreground flex-shrink-0">
               {formatTimestamp(conversation.lastMessageAt)}
             </span>
           )}
@@ -66,13 +65,13 @@ export default function DmItem({ conversation }: DmItemProps) {
         <div className="flex items-center gap-1">
           {conversation.lastMessage ? (
             <p className={cn(
-              "text-xs truncate text-gray-500 dark:text-gray-400 max-w-[180px]",
-              conversation.unreadCount > 0 && "font-medium text-gray-800 dark:text-gray-200"
+              "text-xs truncate text-muted-foreground max-w-[180px]",
+              conversation.unreadCount > 0 && "font-medium"
             )}>
               {conversation.lastMessage}
             </p>
           ) : (
-            <p className="text-xs text-gray-500 italic">
+            <p className="text-xs text-muted-foreground italic">
               No messages yet
             </p>
           )}

@@ -145,7 +145,7 @@
 
 ## Search and Notifications
 
-- [ ] Step 10: Implement Search Functionality
+- [x] Step 10: Implement Search Functionality
 
   - Task: Create search functionality for messages across channels and DMs
   
@@ -159,7 +159,7 @@
   
   - User Instructions: None
 
-- [ ] Step 11: Implement Notifications
+- [x] Step 11: Implement Notifications
 
   - Task: Create notification system for messages and mentions
   
@@ -176,7 +176,7 @@
 
 ## Finalization and Polishing
 
-- [ ] Step 12: Implement User Preferences
+- [x] Step 12: Implement User Preferences
 
   - Task: Create user settings and preferences for notifications and theme
   
@@ -191,7 +191,7 @@
   
   - User Instructions: None
 
-- [ ] Step 13: Mobile Responsiveness
+- [x] Step 13: Mobile Responsiveness
 
   - Task: Ensure the application is fully responsive on all device sizes
   

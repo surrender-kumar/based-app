@@ -6,7 +6,6 @@ import { notFound } from "next/navigation";
 import { getChannelById } from "../../../lib/actions/channels";
 import { useCurrentProfile } from "../../../hooks/use-current-profile";
 import MessageList from "../../../components/messages/message-list";
-import MessageEditor from "../../../components/messages/message-editor";
 import { Profile } from "../../../types";
 import { toast } from "sonner";
 import { getProfiles } from "../../../lib/api-client";
@@ -91,14 +90,7 @@ export default function ChannelPage() {
         onReplyClick={handleReplyClick}
       />
       
-      {/* Message Editor */}
-      <div className="p-4 mt-auto">
-        <MessageEditor
-          channelId={channelId}
-          profile={profile}
-          placeholder={`Message #${channel.name}`}
-        />
-      </div>
+      {/* Note: The MessageInput component is now handled by the MainContent layout component */}
     </div>
   );
 } 

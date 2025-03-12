@@ -12,7 +12,7 @@ import {
   Send
 } from "lucide-react";
 import { usePathname } from "next/navigation";
-import { toast } from "@/components/ui/toast";
+import { toast } from "sonner";
 
 export const MessageInput = () => {
   const [message, setMessage] = useState("");
@@ -21,12 +21,32 @@ export const MessageInput = () => {
   const handleSendMessage = () => {
     if (!message.trim()) return;
     
-    // In a real app, we would send the message to the API
-    const conversationType = pathname.includes("/channels/") ? "channel" : "DM";
-    const conversationId = pathname.split("/").pop() || "";
+    // Determine if we're in a channel or DM and get the ID
+    let conversationType = "unknown";
+    let conversationId = "";
     
-    toast.success(`Message sent to ${conversationType} ${conversationId}`);
-    setMessage("");
+    // Check if we're in a channel
+    if (pathname.includes("/channels/")) {
+      conversationType = "channel";
+      // Extract channel ID, handling both direct channel paths and thread paths
+      const match = pathname.match(/\/channels\/([^\/]+)/);
+      if (match) conversationId = match[1];
+    } 
+    // Check if we're in a DM
+    else if (pathname.includes("/dm/")) {
+      conversationType = "DM";
+      // Extract profile ID from DM path
+      const match = pathname.match(/\/dm\/([^\/]+)/);
+      if (match) conversationId = match[1];
+    }
+    
+    // In a real app, we would send the message to the API
+    if (conversationType !== "unknown" && conversationId) {
+      toast.success(`Message sent to ${conversationType} ${conversationId}`);
+      setMessage("");
+    } else {
+      toast.error("Could not determine where to send message");
+    }
   };
   
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {

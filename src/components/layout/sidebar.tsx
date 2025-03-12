@@ -5,7 +5,6 @@ import { ThemeSwitch } from "@/components/layout/theme-switch";
 import { 
   Settings,
   Search,
-  PlusCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,22 +14,15 @@ import { cn } from "@/lib/utils";
 import ChannelList from "../channels/channel-list";
 import { useState } from "react";
 import { useCurrentProfile } from "@/hooks/use-current-profile";
-import CreateChannelModal from "../channels/create-channel-modal";
-import { toast } from "sonner";
 import DmList from "../direct-messages/dm-list";
+import { NotificationBadge } from "../notifications/notification-badge";
 
 export const Sidebar = () => {
   const pathname = usePathname();
-  const [isCreateChannelOpen, setIsCreateChannelOpen] = useState(false);
   const { profile } = useCurrentProfile();
 
   const isActive = (href: string) => {
     return pathname === href;
-  };
-
-  const handleCreateChannelSuccess = (channel: any) => {
-    setIsCreateChannelOpen(false);
-    toast.success(`Channel ${channel.name} created successfully`);
   };
   
   return (
@@ -38,7 +30,10 @@ export const Sidebar = () => {
       {/* Header section */}
       <div className="p-3 border-b border-border flex items-center justify-between">
         <div className="font-semibold text-xl">Based App</div>
-        <ThemeSwitch />
+        <div className="flex items-center gap-2">
+          <NotificationBadge />
+          <ThemeSwitch />
+        </div>
       </div>
       
       {/* Profile section */}
@@ -56,21 +51,6 @@ export const Sidebar = () => {
           />
         </div>
       </div>
-      
-      {/* Create Channel Button */}
-      {profile && (
-        <div className="px-3 mb-2">
-          <Button 
-            onClick={() => setIsCreateChannelOpen(true)}
-            variant="outline"
-            size="sm"
-            className="w-full flex items-center justify-center gap-2"
-          >
-            <PlusCircle className="h-4 w-4" />
-            <span>Create Channel</span>
-          </Button>
-        </div>
-      )}
       
       {/* Channels */}
       <div className="px-2 py-3">
@@ -97,16 +77,6 @@ export const Sidebar = () => {
           <span>Settings</span>
         </Link>
       </div>
-      
-      {/* Create Channel Modal */}
-      {profile && (
-        <CreateChannelModal
-          isOpen={isCreateChannelOpen}
-          onClose={() => setIsCreateChannelOpen(false)}
-          onCreateSuccess={handleCreateChannelSuccess}
-          profileId={profile.id}
-        />
-      )}
     </div>
   );
 }; 

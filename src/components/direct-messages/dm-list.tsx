@@ -10,7 +10,11 @@ import DmItem from "./dm-item";
 import { useRouter } from "next/navigation";
 import ProfileSearch from "../profiles/profile-search";
 
-export default function DmList() {
+interface DmListProps {
+  onSelect?: () => void;
+}
+
+export default function DmList({ onSelect }: DmListProps = {}) {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -28,8 +32,8 @@ export default function DmList() {
           setConversations(result.data);
         }
       } catch (error) {
-        console.error("[FETCH_CONVERSATIONS_ERROR]", error);
-        toast.error("Failed to load conversations");
+        console.error("Error fetching conversations:", error);
+        toast.error("Failed to load direct messages");
       } finally {
         setIsLoading(false);
       }
@@ -39,55 +43,51 @@ export default function DmList() {
   }, [profile]);
 
   const handleProfileSelect = (profileId: string) => {
-    if (profileId === profile?.id) {
-      toast.error("You can't message yourself");
-      return;
-    }
-
-    router.push(`/dm/${profileId}`);
     setIsSearchOpen(false);
+    router.push(`/dm/${profileId}`);
+    if (onSelect) onSelect();
+  };
+
+  // Handle conversation click to close the mobile menu
+  const handleConversationClick = () => {
+    if (onSelect) onSelect();
   };
 
   return (
-    <div className="py-2">
-      <div className="flex items-center justify-between px-3 mb-2">
-        <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400">
-          Direct Messages
-        </h2>
-        <Button
+    <div className="space-y-2">
+      <div className="flex items-center justify-between px-2">
+        <h2 className="text-sm font-semibold">Direct Messages</h2>
+        <Button 
           onClick={() => setIsSearchOpen(true)}
-          variant="ghost"
-          size="icon"
-          className="h-6 w-6"
+          variant="ghost" 
+          size="icon" 
+          className="h-6 w-6 rounded-full"
         >
           <Plus className="h-4 w-4" />
         </Button>
       </div>
-
-      <div className="space-y-0.5">
+      
+      <div className="space-y-[2px]">
         {isLoading ? (
-          <div className="px-3 py-2">
-            <p className="text-sm text-gray-500">Loading conversations...</p>
-          </div>
+          <div className="text-xs text-muted-foreground px-2">Loading...</div>
         ) : conversations.length === 0 ? (
-          <div className="px-3 py-2">
-            <p className="text-sm text-gray-500">No conversations yet.</p>
-          </div>
+          <div className="text-xs text-muted-foreground px-2">No conversations yet</div>
         ) : (
-          conversations.map((conversation) => (
-            <DmItem key={conversation.id} conversation={conversation} />
+          conversations.map(conversation => (
+            <DmItem 
+              key={conversation.id} 
+              conversation={conversation}
+              onClick={handleConversationClick}
+            />
           ))
         )}
       </div>
-
-      {isSearchOpen && (
-        <ProfileSearch
-          isOpen={isSearchOpen}
-          onClose={() => setIsSearchOpen(false)}
-          onSelect={handleProfileSelect}
-          excludeProfileId={profile?.id}
-        />
-      )}
+      
+      <ProfileSearch 
+        isOpen={isSearchOpen}
+        onClose={() => setIsSearchOpen(false)}
+        onSelect={handleProfileSelect}
+      />
     </div>
   );
 } 
