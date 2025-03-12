@@ -1,0 +1,10 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+- We are building a slack clone
+- Find the steps in the [implementation-plan.md](mdc:implementation-plan.md)
+- Work on whatever steps I tell you to work on and only that step or steps at once. 
+- Once those steps are done. Mark as completed.
+- Then stop, I will give you further instructions
