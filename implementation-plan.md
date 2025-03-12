@@ -2,7 +2,7 @@
 
 ## Database Schema & Setup
 
-- [ ] Step 1: Create Database Schema
+- [x] Step 1: Create Database Schema
 
   - Task: Define the database schema for profiles, channels, and messages using Drizzle ORM
   
@@ -18,7 +18,7 @@
   
   - User Instructions: Ensure your Supabase database is provisioned and the DATABASE_URL is set in your .env.local file
 
-- [ ] Step 2: Create Seed Data for Profiles
+- [x] Step 2: Create Seed Data for Profiles
 
   - Task: Create seed data script for profiles to simulate users without authentication
   

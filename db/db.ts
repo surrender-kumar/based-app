@@ -4,14 +4,19 @@ Initializes the database connection and schema for the app.
 </ai_context>
 */
 
-import { config } from "dotenv"
 import { drizzle } from "drizzle-orm/postgres-js"
 import postgres from "postgres"
+import * as schema from "./schema"
+import * as dotenv from "dotenv"
 
-config({ path: ".env.local" })
+// Load environment variables from .env.local
+dotenv.config({ path: ".env.local" })
 
-const schema = {}
+const connectionString = process.env.DATABASE_URL
 
-const client = postgres(process.env.DATABASE_URL!)
+if (!connectionString) {
+  throw new Error("DATABASE_URL is not set")
+}
 
+const client = postgres(connectionString)
 export const db = drizzle(client, { schema })
