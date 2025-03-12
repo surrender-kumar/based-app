@@ -2,6 +2,7 @@
 
 import { v4 as uuidv4 } from 'uuid';
 import { revalidatePath } from "next/cache";
+import { mockProfiles } from "../../mocks/profiles";
 
 // Type for a direct message
 export type DirectMessage = {
@@ -76,63 +77,62 @@ const mockDirectMessages: DirectMessage[] = [
 ];
 
 /**
- * Fetches all conversations for a user
+ * Gets conversations with other users
  */
 export async function getConversations(profileId: string) {
   try {
-    // In a real app, we would query the database for all direct messages
-    // involving the user and then group them by conversation partner
-    
-    // Get unique conversation partners for this user
-    const conversationPartnerIds = Array.from(new Set(
-      mockDirectMessages
-        .filter(msg => msg.senderId === profileId || msg.receiverId === profileId)
-        .map(msg => msg.senderId === profileId ? msg.receiverId : msg.senderId)
-    ));
-    
-    // Fetch each conversation
-    const conversations: Conversation[] = await Promise.all(
-      conversationPartnerIds.map(async (partnerId) => {
-        // In a real app, we would fetch user details from database
-        // For now, simulate an API call to get profile details
-        const partnerResponse = await fetch(`/api/profiles/${partnerId}`);
-        const partnerData = await partnerResponse.json();
-        const partner = partnerData.profile;
-        
-        if (!partner) {
-          throw new Error(`Profile with ID ${partnerId} not found`);
-        }
-        
-        // Get messages between the two users, ordered by createdAt
-        const messages = mockDirectMessages
-          .filter(msg => 
-            (msg.senderId === profileId && msg.receiverId === partnerId) || 
-            (msg.senderId === partnerId && msg.receiverId === profileId)
-          )
-          .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-        
-        // Calculate unread count
-        const unreadCount = messages.filter(
-          msg => msg.receiverId === profileId && !msg.isRead
-        ).length;
-        
-        // Get last message
-        const lastMessage = messages.length > 0 ? messages[0] : null;
-        
-        return {
-          id: partnerId, // Use partner ID as conversation ID for simplicity
-          profileId: partnerId,
-          name: partner.name,
-          email: partner.email,
-          imageUrl: partner.imageUrl,
-          lastMessage: lastMessage ? lastMessage.content : null,
-          lastMessageAt: lastMessage ? lastMessage.createdAt : null,
-          unreadCount
-        };
-      })
+    // Get all direct messages involving this user
+    const messages = mockDirectMessages.filter(
+      msg => msg.senderId === profileId || msg.receiverId === profileId
     );
     
-    // Sort conversations by last message time
+    // Group messages by conversation partner
+    const conversationsByPartner = new Map<string, DirectMessage[]>();
+    
+    messages.forEach(msg => {
+      const partnerId = msg.senderId === profileId ? msg.receiverId : msg.senderId;
+      
+      if (!conversationsByPartner.has(partnerId)) {
+        conversationsByPartner.set(partnerId, []);
+      }
+      
+      conversationsByPartner.get(partnerId)!.push(msg);
+    });
+    
+    // Create conversation summaries
+    const conversations: Conversation[] = [];
+    
+    for (const [partnerId, msgs] of conversationsByPartner.entries()) {
+      // Get partner profile info
+      const partner = mockProfiles.find(p => p.id === partnerId);
+      
+      if (!partner) continue;
+      
+      // Sort messages by date (newest first for finding latest)
+      msgs.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+      
+      // Get latest message
+      const latestMessage = msgs[0];
+      
+      // Count unread messages
+      const unreadCount = msgs.filter(
+        msg => msg.receiverId === profileId && !msg.isRead
+      ).length;
+      
+      // Create conversation summary
+      conversations.push({
+        id: partnerId,
+        profileId: partnerId,
+        name: partner.name,
+        email: partner.email,
+        imageUrl: partner.imageUrl,
+        lastMessage: latestMessage.content,
+        lastMessageAt: latestMessage.createdAt,
+        unreadCount
+      });
+    }
+    
+    // Sort by last message date
     conversations.sort((a, b) => {
       if (!a.lastMessageAt) return 1;
       if (!b.lastMessageAt) return -1;

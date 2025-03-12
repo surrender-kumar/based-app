@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useCurrentProfile } from "../../../hooks/use-current-profile";
 import { DirectMessage, getDirectMessages, markMessagesAsRead, sendDirectMessage } from "../../../lib/actions/direct-messages";
 import { Avatar, AvatarFallback, AvatarImage } from "../../../components/ui/avatar";
@@ -11,6 +11,7 @@ import { Send } from "lucide-react";
 import { toast } from "sonner";
 import { formatRelative } from "date-fns";
 import { Profile } from "../../../types";
+import { getProfileById } from "../../../lib/api-client";
 
 export default function DirectMessagePage() {
   const params = useParams();
@@ -22,24 +23,31 @@ export default function DirectMessagePage() {
   const [newMessage, setNewMessage] = useState("");
   const { profile } = useCurrentProfile();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
   
-  // Get other user's profile
+  // Fetch partner profile
   useEffect(() => {
-    const fetchProfile = async () => {
+    const fetchPartnerProfile = async () => {
       try {
-        const response = await fetch(`/api/profiles/${profileId}`);
-        const data = await response.json();
+        const data = await getProfileById(profileId);
+        
         if (data.profile) {
           setOtherProfile(data.profile);
+        } else {
+          toast.error("User not found");
+          router.push("/");
         }
       } catch (error) {
-        console.error("[FETCH_PROFILE_ERROR]", error);
-        toast.error("Failed to load profile");
+        console.error("[FETCH_PARTNER_PROFILE_ERROR]", error);
+        toast.error("Failed to load user");
+        router.push("/");
+      } finally {
+        setIsLoading(false);
       }
     };
     
-    fetchProfile();
-  }, [profileId]);
+    fetchPartnerProfile();
+  }, [profileId, router]);
   
   // Get messages between users
   useEffect(() => {

@@ -114,7 +114,7 @@
 
 ## Message System
 
-- [ ] Step 8: Implement Message System
+- [x] Step 8: Implement Message System
 
   - Task: Create the core messaging functionality including sending, displaying, and formatting messages
   
@@ -129,7 +129,7 @@
   
   - User Instructions: None
 
-- [ ] Step 9: Implement Message Threading
+- [x] Step 9: Implement Message Threading
 
   - Task: Create thread reply functionality for messages
   

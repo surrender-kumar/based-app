@@ -3,6 +3,7 @@
 import { createContext, useEffect, useState } from "react";
 import { Profile } from "@/types";
 import { ProfileContextType } from "@/hooks/use-current-profile";
+import { getProfiles, getProfileById } from "../../lib/api-client";
 
 export const ProfileContext = createContext<ProfileContextType | null>(null);
 
@@ -17,8 +18,7 @@ export const ProfileProvider = ({
   // Function to fetch and set profiles
   const fetchProfiles = async () => {
     try {
-      const response = await fetch("/api/profiles");
-      const data = await response.json();
+      const data = await getProfiles();
 
       // If we have profiles and no profile is selected yet, select the first one
       if (data.profiles.length > 0 && !profile) {
@@ -51,8 +51,7 @@ export const ProfileProvider = ({
       
       if (savedProfileId) {
         try {
-          const response = await fetch(`/api/profiles/${savedProfileId}`);
-          const data = await response.json();
+          const data = await getProfileById(savedProfileId);
           
           if (data.profile) {
             setProfile(data.profile);

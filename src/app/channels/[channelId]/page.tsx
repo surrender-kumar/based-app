@@ -1,65 +1,104 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { useParams, useRouter } from "next/navigation";
 import { notFound } from "next/navigation";
 import { getChannelById } from "../../../lib/actions/channels";
+import { useCurrentProfile } from "../../../hooks/use-current-profile";
+import MessageList from "../../../components/messages/message-list";
+import MessageEditor from "../../../components/messages/message-editor";
+import { Profile } from "../../../types";
+import { toast } from "sonner";
+import { getProfiles } from "../../../lib/api-client";
 
-interface ChannelPageProps {
-  params: {
-    channelId: string;
-  };
-}
-
-export default async function ChannelPage({ params }: ChannelPageProps) {
-  const { channelId } = params;
+export default function ChannelPage() {
+  const params = useParams();
+  const router = useRouter();
+  const channelId = params.channelId as string;
+  const { profile } = useCurrentProfile();
+  const [channel, setChannel] = useState<{ name: string; description: string | null } | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [profiles, setProfiles] = useState<Profile[]>([]);
   
-  try {
-    const { success, data: channel, error } = await getChannelById(channelId);
-    
-    if (!success || !channel) {
-      notFound();
-    }
-    
-    return (
-      <div className="flex flex-col h-full">
-        <div className="flex-1 overflow-y-auto">
-          <div className="p-4">
-            <h1 className="text-2xl font-bold mb-2">{channel.name}</h1>
-            {channel.description && (
-              <p className="text-sm text-gray-500 mb-6">{channel.description}</p>
-            )}
-            
-            {/* Messages will be implemented in step 8 */}
-            <div className="text-gray-500 py-12 flex flex-col items-center justify-center">
-              <p className="text-sm">No messages yet.</p>
-              <p className="text-xs mt-1">
-                This is the beginning of the #{channel.name} channel.
-              </p>
-            </div>
-          </div>
-        </div>
+  // Fetch channel details
+  useEffect(() => {
+    const fetchChannel = async () => {
+      try {
+        const result = await getChannelById(channelId);
+        if (!result.success || !result.data) {
+          toast.error("Channel not found");
+          return;
+        }
         
-        {/* Message input will be implemented in step 8 */}
-        <div className="p-4 border-t">
-          <div className="rounded-md border p-2 flex items-center">
-            <input
-              type="text"
-              placeholder={`Message #${channel.name}`}
-              className="flex-1 bg-transparent focus:outline-none text-sm"
-              disabled
-            />
-            <button
-              className="ml-2 text-xs text-gray-500 bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded"
-              disabled
-            >
-              Send
-            </button>
-          </div>
-          <p className="text-xs text-gray-500 mt-1 text-center">
-            Message functionality will be implemented in step 8
-          </p>
-        </div>
+        setChannel(result.data);
+      } catch (error) {
+        console.error("[FETCH_CHANNEL_ERROR]", error);
+        toast.error("Failed to load channel");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchChannel();
+  }, [channelId]);
+  
+  // Fetch profiles for message authors
+  useEffect(() => {
+    const fetchProfiles = async () => {
+      try {
+        const data = await getProfiles();
+        setProfiles(data.profiles);
+      } catch (error) {
+        console.error("[FETCH_PROFILES_ERROR]", error);
+        toast.error("Failed to load profiles");
+      }
+    };
+    
+    fetchProfiles();
+  }, []);
+  
+  // Handle reply click
+  const handleReplyClick = (messageId: string) => {
+    router.push(`/channels/${channelId}/thread/${messageId}`);
+  };
+  
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <p className="text-muted-foreground">Loading channel...</p>
       </div>
     );
-  } catch (error) {
-    console.error("Error fetching channel:", error);
+  }
+  
+  if (!channel) {
     return notFound();
   }
+  
+  return (
+    <div className="flex flex-col h-full">
+      <div className="border-b p-4">
+        <h1 className="text-xl font-semibold">#{channel.name}</h1>
+        {channel.description && (
+          <p className="text-sm text-muted-foreground mt-1">{channel.description}</p>
+        )}
+      </div>
+      
+      {/* Message List */}
+      <MessageList
+        channelId={channelId}
+        currentProfile={profile}
+        profiles={profiles}
+        onReplyClick={handleReplyClick}
+      />
+      
+      {/* Message Editor */}
+      <div className="p-4 mt-auto">
+        <MessageEditor
+          channelId={channelId}
+          profile={profile}
+          placeholder={`Message #${channel.name}`}
+        />
+      </div>
+    </div>
+  );
 } 

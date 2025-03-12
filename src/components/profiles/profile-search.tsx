@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Search } from "lucide-react";
 import { Profile } from "../../types";
 import { toast } from "sonner";
+import { getProfiles } from "../../lib/api-client";
 
 interface ProfileSearchProps {
   isOpen: boolean;
@@ -31,8 +32,7 @@ export default function ProfileSearch({
     const fetchProfiles = async () => {
       setIsLoading(true);
       try {
-        const response = await fetch("/api/profiles");
-        const data = await response.json();
+        const data = await getProfiles();
         
         // Filter out the excluded profile if provided
         const fetchedProfiles = excludeProfileId

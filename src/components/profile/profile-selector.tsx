@@ -13,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
+import { getProfiles } from "@/lib/api-client";
 
 export const ProfileSelector = () => {
   const { profile, setProfile, isLoading } = useCurrentProfile() as ProfileContextType;
@@ -23,8 +24,7 @@ export const ProfileSelector = () => {
   useEffect(() => {
     const fetchProfiles = async () => {
       try {
-        const response = await fetch("/api/profiles");
-        const data = await response.json();
+        const data = await getProfiles();
         setProfiles(data.profiles);
       } catch (error) {
         console.error("Error fetching profiles:", error);
